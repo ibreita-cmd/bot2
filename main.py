@@ -1,3 +1,4 @@
+import os
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -10,11 +11,12 @@ from telegram.ext import (
 )
 
 # ---------------- إعدادات البوت ----------------
-TOKEN = "8169559283:AAGRln4XS6jUyT0J4qjJqUTN4Nvy8m0_Axc"
+TOKEN = os.environ.get("8169559283:AAGRln4XS6jUyT0J4qjJqUTN4Nvy8m0_Axc")
+
 SUPERVISORS_GROUP_ID = -1003576246959
 FINAL_CHANNEL_ID = -1003494248444
 
-# ---------------- شتائم ----------------
+# ---------------- كلمات ممنوعة ----------------
 BANNED_WORDS = [
     "كلبة", "حيوانة", "بقرة", "جموسة", "قحبة",
     "كلب", "منيوك", "معرص", "عرص", "قحبه",
@@ -22,7 +24,7 @@ BANNED_WORDS = [
     "مبعوص", "بعص", "باعص", "اخو", "معيرص"
 ]
 
-# ---------------- تسجيل ----------------
+# ---------------- تسجيل اللوج ----------------
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -38,7 +40,7 @@ def contains_banned_words(text: str) -> bool:
     if not text:
         return False
     text = text.lower()
-    return any(word.lower() in text for word in BANNED_WORDS)
+    return any(word in text for word in BANNED_WORDS)
 
 # ---------------- /start ----------------
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -75,8 +77,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         gender = user_data.get(user_id, {}).get("gender", "طالب")
         prefix = f"📨 رسالة مُحوّلة من {gender}\n\n"
 
-        if action == "approve":
-            try:
+        try:
+            if action == "approve":
                 if original_message["text"]:
                     await context.bot.send_message(
                         FINAL_CHANNEL_ID,
@@ -95,16 +97,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         caption=prefix + (original_message.get("caption") or "")
                     )
 
-                pending_messages.pop((user_id, msg_id), None)
                 await query.edit_message_text("✅ تمت الموافقة ونشر الرسالة في القناة")
 
-            except Exception as e:
-                logger.error(e)
-                await query.edit_message_text("❌ حصل خطأ أثناء النشر")
+            else:
+                await query.edit_message_text("❌ تم رفض الرسالة")
 
-        elif action == "reject":
             pending_messages.pop((user_id, msg_id), None)
-            await query.edit_message_text("❌ تم رفض الرسالة")
+
+        except Exception as e:
+            logger.error(e)
+            await query.edit_message_text("❌ حصل خطأ أثناء التنفيذ")
 
 # ---------------- استقبال رسائل الخاص ----------------
 async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
