@@ -11,8 +11,7 @@ from telegram.ext import (
 )
 
 # ---------------- إعدادات البوت ----------------
-TOKEN = os.environ.get("8169559283:AAGRln4XS6jUyT0J4qjJqUTN4Nvy8m0_Axc")
-
+TOKEN = os.environ.get("TOKEN")
 SUPERVISORS_GROUP_ID = -1003576246959
 FINAL_CHANNEL_ID = -1003494248444
 
@@ -192,3 +191,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
